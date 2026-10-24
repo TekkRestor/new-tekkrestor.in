@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /tickets/lookup.html
+
+Sitemap: https://tekkrestor.in/sitemap.xml

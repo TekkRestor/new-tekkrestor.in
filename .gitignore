@@ -1,0 +1,5 @@
+/api/config.php
+/tekkrestor-private-uploads/
+/private_uploads/
+*.log
+.DS_Store

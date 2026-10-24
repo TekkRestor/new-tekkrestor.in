@@ -1,0 +1,12 @@
+<?php
+declare(strict_types=1); require __DIR__.'/_bootstrap.php';
+$count=(int)db()->query('SELECT COUNT(*) FROM admin_users')->fetchColumn();
+if ($count>0) { http_response_code(403); exit('Initial setup is disabled because an administrator already exists. Delete this setup file after creating the first administrator.'); }
+$error='';
+if ($_SERVER['REQUEST_METHOD']==='POST') { admin_verify_csrf(); $u=trim((string)($_POST['username']??'')); $pw=(string)($_POST['password']??''); $confirm=(string)($_POST['confirm']??'');
+ if (!preg_match('/^[A-Za-z0-9_.-]{4,80}$/',$u)) $error='Username must be 4–80 characters using letters, numbers, dot, underscore or hyphen.';
+ elseif (strlen($pw)<14 || !preg_match('/[A-Z]/',$pw) || !preg_match('/[a-z]/',$pw) || !preg_match('/[0-9]/',$pw) || !preg_match('/[^A-Za-z0-9]/',$pw)) $error='Use a password of at least 14 characters with uppercase, lowercase, number and symbol.';
+ elseif ($pw!==$confirm) $error='Passwords do not match.';
+ else { $s=db()->prepare('INSERT INTO admin_users(username,password_hash) VALUES(?,?)'); $s->execute([$u,password_hash($pw,PASSWORD_DEFAULT)]); @unlink(__FILE__); header('Location: login.php?setup=complete'); exit; }
+}
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Initial Admin Setup | TekkRestor</title><link rel="stylesheet" href="/assets/style.css"></head><body><main class="container" style="max-width:620px;padding:4rem 1rem"><div class="form-card"><h1>Set up the first administrator</h1><p>Use a unique password. After setup, delete <code>admin/setup.php</code> from your hosting account.</p><?php if($error): ?><div class="notice"><?=h($error)?></div><?php endif; ?><form method="post"><input type="hidden" name="csrf" value="<?=h(admin_csrf())?>"><div class="field"><label for="username">Username</label><input id="username" name="username" required minlength="4" maxlength="80" autocomplete="username"></div><div class="field"><label for="password">Strong password</label><input id="password" type="password" name="password" required autocomplete="new-password"></div><div class="field"><label for="confirm">Confirm password</label><input id="confirm" type="password" name="confirm" required autocomplete="new-password"></div><button class="btn" type="submit">Create administrator</button></form></div></main></body></html>
